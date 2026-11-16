@@ -1,0 +1,27 @@
+# Shared settings, imported by train.yaml / eval.yaml / serve.yaml via `inherit: common.yaml`.
+# The prompt, pixel limits and decoding below MUST stay identical for the baseline eval,
+# training, the final eval and serving -- otherwise before/after numbers are not comparable.
+
+model_name: Qwen/Qwen2.5-VL-3B-Instruct
+seed: 42
+
+data_dir: data/processed     # override on Colab with --data_dir
+results_dir: results         # override on Colab with --results_dir
+
+# Image resolution. Qwen2.5-VL turns every 28x28 pixel block into 1 visual token,
+# so max_pixels directly controls sequence length, speed and GPU memory.
+min_pixels: 200704           # 256 * 28 * 28
+max_pixels: 1003520          # 1280 * 28 * 28
+
+system_prompt: "Answer the question using only text from the document. Reply with the answer only."
+
+generation:
+  max_new_tokens: 32         # greedy decoding (do_sample=False, num_beams=1) is fixed in code
+
+attn_implementation: sdpa    # PyTorch SDPA. flash-attention is intentionally not used (T4 has no support)
+vision_fp32_when_fp16: true  # on fp16-only GPUs (T4) keep the vision tower in fp32 to avoid fp16 overflow
+
+quantization:                # used whenever a script runs with load_in_4bit: true
+  bnb_4bit_quant_type: nf4
+  bnb_4bit_use_double_quant: true
+  skip_modules: ["visual", "lm_head"]   # vision tower + LM head stay un-quantized

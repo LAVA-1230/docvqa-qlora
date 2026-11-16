@@ -1,0 +1,16 @@
+# Phase 1 - dataset preparation (src/data/prepare_dataset.py)
+dataset_name: HuggingFaceM4/DocumentVQA
+source_split: train          # only the official TRAIN split is used (test answers are hidden)
+streaming: true
+shuffle_buffer: 1000         # streaming shuffle buffer (rows held in RAM incl. image bytes)
+
+keep_question_types: ["table/list", "form"]   # a QA pair is kept if it has ANY of these types
+target_samples: 3000         # number of QA pairs to keep
+max_scan: 60000              # stop scanning after this many raw rows even if target not reached
+
+# Split BY DOCUMENT so no document appears in two splits (prevents leakage).
+group_key: ucsf_document_id  # stricter than docId: groups all pages of the same source document
+split_ratios: {train: 0.8, val: 0.1, test: 0.1}
+
+output_dir: data/processed   # override on Colab with --output_dir (Google Drive)
+seed: 42

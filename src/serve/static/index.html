@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DocVQA Demo</title>
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1d2330; --muted:#5d6675; --accent:#2d5bd7; --line:#dde1e8; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#14171c; --card:#1d2128; --ink:#e7eaf0; --muted:#9aa3b2; --accent:#7ea2ff; --line:#2f3540; } }
+  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.5 system-ui, sans-serif; }
+  main { max-width:880px; margin:0 auto; padding:24px 16px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; } p.sub { color:var(--muted); margin:0 0 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  .grid { display:grid; gap:16px; grid-template-columns: 1fr 1fr; } @media (max-width:700px){ .grid{grid-template-columns:1fr;} }
+  label { display:block; font-weight:600; margin:10px 0 4px; }
+  input[type=text] { width:100%; box-sizing:border-box; padding:9px; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--ink); }
+  button { margin-top:14px; padding:9px 18px; border:0; border-radius:6px; background:var(--accent); color:#fff; font-weight:600; cursor:pointer; }
+  button:disabled { opacity:.6; cursor:wait; }
+  img#preview { max-width:100%; max-height:520px; border-radius:6px; border:1px solid var(--line); }
+  .answer { font-size:1.3rem; font-weight:700; margin:6px 0; word-break:break-word; } .meta { color:var(--muted); font-size:.9rem; }
+  .err { color:#d64545; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Document Question Answering</h1>
+  <p class="sub">Qwen2.5-VL-3B fine-tuned with QLoRA on DocVQA (tables &amp; forms). Upload a PNG / JPG / PDF and ask a question.</p>
+  <div class="grid">
+    <div class="card">
+      <form id="f">
+        <label for="file">Document</label>
+        <input id="file" name="file" type="file" accept=".png,.jpg,.jpeg,.pdf" required>
+        <label for="q">Question</label>
+        <input id="q" name="question" type="text" placeholder="e.g. What is the total amount?" maxlength="300" required>
+        <button id="go" type="submit">Ask</button>
+      </form>
+      <div id="out" style="margin-top:16px"></div>
+    </div>
+    <div class="card"><img id="preview" alt="document preview" hidden></div>
+  </div>
+</main>
+<script>
+const f = document.getElementById('f'), out = document.getElementById('out'), go = document.getElementById('go');
+document.getElementById('file').addEventListener('change', e => {
+  const file = e.target.files[0], img = document.getElementById('preview');
+  if (file && file.type.startsWith('image/')) { img.src = URL.createObjectURL(file); img.hidden = false; } else { img.hidden = true; }
+});
+f.addEventListener('submit', async e => {
+  e.preventDefault(); go.disabled = true; out.textContent = 'Thinking...';
+  try {
+    const r = await fetch('/predict', { method: 'POST', body: new FormData(f) });
+    const j = await r.json();
+    if (!r.ok) { out.innerHTML = '<span class="err"></span>'; out.firstChild.textContent = j.detail || r.statusText; return; }
+    out.innerHTML = '<div class="meta">Answer</div><div class="answer"></div><div class="meta"></div>';
+    out.children[1].textContent = j.answer;
+    out.children[2].textContent = `${j.latency_ms} ms · ${j.model_version}`;
+  } catch (err) { out.innerHTML = '<span class="err"></span>'; out.firstChild.textContent = String(err); }
+  finally { go.disabled = false; }
+});
+</script>
+</body>
+</html>

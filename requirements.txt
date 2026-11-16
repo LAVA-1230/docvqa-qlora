@@ -1,0 +1,20 @@
+# Full environment (Colab / development).
+# torch is pinned separately because Colab and the Docker base images already ship a CUDA
+# build of torch; re-installing it would download ~2.5 GB and can break CUDA.
+#   GPU (Docker):  pytorch/pytorch:2.6.0-cuda12.4-cudnn9-runtime  -> torch 2.6.0
+#   Local CPU:     pip install torch==2.6.0 --index-url https://download.pytorch.org/whl/cpu
+#   Tested with:   torch 2.6.0 (Docker), Colab's preinstalled torch, torch 2.10 CPU (local tests)
+transformers==4.51.3        # needs >=4.49 for Qwen2_5_VLForConditionalGeneration
+peft==0.15.2
+accelerate==1.6.0
+bitsandbytes==0.45.5        # 4-bit NF4 (CUDA only)
+datasets==3.6.0
+rapidfuzz==3.13.0           # Levenshtein distance for ANLS
+pillow==11.2.1
+pyyaml==6.0.2
+fastapi==0.115.12
+uvicorn==0.34.2
+python-multipart==0.0.20    # multipart/form-data uploads in FastAPI
+pypdfium2==4.30.1           # render the first page of uploaded PDFs (no system poppler needed)
+pytest==8.3.5
+httpx==0.28.1               # FastAPI TestClient

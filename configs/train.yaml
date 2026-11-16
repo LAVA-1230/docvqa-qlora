@@ -1,0 +1,40 @@
+# Phase 4 - QLoRA training (src/train.py). Prompt and pixel limits come from common.yaml.
+inherit: common.yaml
+
+output_dir: outputs/qlora    # checkpoints + best_adapter. On Colab: a Google Drive folder
+load_in_4bit: true           # QLoRA = frozen 4-bit NF4 base + trainable LoRA adapters
+
+lora:
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  bias: none
+  # LLM linear layers only. The code turns this list into a regex that EXCLUDES every
+  # module under "visual" (the vision tower also has gate_proj/up_proj/down_proj!).
+  target_modules: [q_proj, k_proj, v_proj, o_proj, gate_proj, up_proj, down_proj]
+
+training:                    # passed straight into transformers.TrainingArguments
+  num_train_epochs: 2
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16     # effective batch = 1 x 16 = 16
+  learning_rate: 0.0002
+  lr_scheduler_type: cosine
+  warmup_ratio: 0.03
+  weight_decay: 0.0
+  max_grad_norm: 1.0
+  optim: paged_adamw_8bit
+  logging_steps: 5
+  save_strategy: steps       # frequent checkpoints so a Colab disconnect loses little work...
+  save_steps: 25
+  save_total_limit: 2        # ...plus a forced checkpoint at the end of every epoch (callback)
+  eval_strategy: epoch       # validation LOSS each epoch
+  per_device_eval_batch_size: 1
+  dataloader_num_workers: 2
+  gradient_checkpointing: true
+  report_to: none            # set to "wandb" to log to Weights & Biases
+
+eval_loss_limit: 200         # val samples used for the per-epoch validation loss
+val_anls:                    # per-epoch validation ANLS (generation), used to pick the best adapter
+  enabled: true
+  limit: 200
+  batch_size: 4

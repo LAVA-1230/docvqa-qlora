@@ -1,0 +1,5 @@
+# Phase 3 / 5 - evaluation (src/evaluate.py). Prompt, pixels and decoding come from common.yaml.
+inherit: common.yaml
+
+load_in_4bit: false          # baseline uses plain fp16/bf16 weights (pass --load_in_4bit to change)
+batch_size: 4                # T4 + max_pixels 1280*28*28: 4 fits; lower to 2 on OOM

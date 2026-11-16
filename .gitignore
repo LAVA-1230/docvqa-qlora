@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+.ipynb_checkpoints/
+wandb/
+
+# large / generated artifacts (live on Google Drive)
+data/
+outputs/
+models/
+
+# results/ IS committed (baseline.json, finetuned.json, ...), except smoke-test outputs
+results/smoke*

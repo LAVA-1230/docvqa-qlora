@@ -1,0 +1,24 @@
+# Phase 7 - REST API (src/serve). Every key can be overridden by an env var (see src/serve/app.py).
+inherit: common.yaml
+
+mode: merged                 # merged | adapter | base | mock
+merged_model_path: /models/merged
+adapter_path: /models/adapter
+adapter_load_in_4bit: true   # mode=adapter on GPU: 4-bit base + LoRA adapter (same as training)
+model_version: qwen2.5-vl-3b-docvqa-qlora-v1
+device: auto                 # auto | cuda | cpu
+
+cpu:                         # used automatically when no CUDA GPU is found
+  dtype: bfloat16            # weights kept in bf16 to fit in laptop RAM (~7.5 GB)
+  upcast_matmul: true        # do each Linear matmul in fp32 (much faster than bf16 matmul on most CPUs)
+  min_pixels: 50176          # 64 * 28 * 28
+  max_pixels: 200704         # 256 * 28 * 28  (small = fast demo on CPU)
+  num_threads: 0             # 0 = PyTorch default
+
+limits:
+  max_upload_mb: 10
+  max_question_chars: 300
+  max_batch_size: 8
+  max_image_pixels: 40000000 # reject absurdly large images (decompression bombs)
+
+pdf_render_scale: 2.0        # PDF first page rendered at 72*2 = 144 dpi

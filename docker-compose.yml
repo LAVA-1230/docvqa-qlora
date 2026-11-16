@@ -1,0 +1,44 @@
+# GPU:  docker compose up --build api
+# CPU:  docker compose --profile cpu up --build api-cpu
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: docvqa-api
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_MODE=merged            # merged | adapter | base | mock
+      - MERGED_MODEL_PATH=/models/merged
+      - ADAPTER_PATH=/models/adapter
+    volumes:
+      - ./models:/models:ro
+      - hf-cache:/cache/huggingface
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  api-cpu:
+    profiles: ["cpu"]
+    build:
+      context: .
+      dockerfile: Dockerfile.cpu
+    image: docvqa-api-cpu
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_MODE=merged
+      - MERGED_MODEL_PATH=/models/merged
+    volumes:
+      - ./models:/models:ro
+      - hf-cache:/cache/huggingface
+    restart: unless-stopped
+
+volumes:
+  hf-cache:
