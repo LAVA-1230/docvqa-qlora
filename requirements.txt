@@ -7,7 +7,7 @@
 transformers==4.51.3        # needs >=4.49 for Qwen2_5_VLForConditionalGeneration
 peft==0.15.2
 accelerate==1.6.0
-bitsandbytes==0.45.5        # 4-bit NF4 (CUDA only)
+bitsandbytes      # 4-bit NF4 (CUDA only)
 datasets==3.6.0
 rapidfuzz==3.13.0           # Levenshtein distance for ANLS
 pillow==11.2.1
